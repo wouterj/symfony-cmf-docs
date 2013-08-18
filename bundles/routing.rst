@@ -42,6 +42,8 @@ enabled implementation. It does not route anything on its own, but only loops
 through all chained routers. To handle standard configured symfony routes, the
 symfony default router can be put into the chain.
 
+.. _bundle-routing-configuration:
+
 Configuration
 -------------
 
