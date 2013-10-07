@@ -72,6 +72,8 @@ Because the PHPCR uses a tree structure, instead of using IDs, a class has a
 
     .. code-block:: php-annotations
 
+ TODO FIX ANNOTATION COMMENTS
+
         // src/Acme/TaskBundle/Document/Task.php
         namespace Acme\TaskBundle\Document;
 
@@ -79,22 +81,22 @@ Because the PHPCR uses a tree structure, instead of using IDs, a class has a
 
         /**
          * @PHPCR\Document()
-         */
+         *
         class Task
         {
             /**
              * @PHPCR\String()
-             */
+             *
             protected $description;
 
             /**
              * @PHPCR\Boolean()
-             */
+             *
             protected $done = false;
 
             /**
              * @PHPCR\ParentDocument()
-             */
+             *
             protected $parent;
         }
 
