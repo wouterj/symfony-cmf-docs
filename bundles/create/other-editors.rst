@@ -36,16 +36,13 @@ Then re-run composer:
 
     $ php composer.phar run-scripts
 
-In your template, load the javascript files using:
+In your template, load the JavaScript files using:
 
 .. configuration-block::
 
     .. code-block:: jinja
 
-        {% render(controller(
-            "cmf_create.jsloader.controller:includeJSFilesAction",
-            {"editor": "hallo", "_locale":app.request.locale}
-        )) %}
+        {% render(controller("cmf_create.jsloader.controller:includeJSFilesAction")) %}
 
     .. code-block:: php
 
@@ -85,7 +82,7 @@ Custom Editors
 --------------
 
 You can provide your own template to customize how to load CKEditor, hallo.js
-or a javascript editor not supported out of the box. The template has
+or a WYSIWYG editor not supported out of the box. The template has
 follow the naming pattern
 ``CmfCreateBundle::includejsfiles-%editor%.html.twig`` to be loaded. You custom
 file thus needs to reside in ``app/Resources/CmfCreateBundle/views/`` and has
@@ -99,7 +96,7 @@ editor parameter:
 
         {% render(controller(
                 "cmf_create.jsloader.controller:includeJSFilesAction",
-                 {'editor': 'myeditor', '_locale': app.request.locale }
+                 {'editor': 'myeditor' }
         )) %}
 
     .. code-block:: php
@@ -107,7 +104,6 @@ editor parameter:
         <?php $view['actions']->render(
             new ControllerReference('cmf_create.jsloader.controller:includeJSFilesAction', array(
                 'editor'  => 'myeditor',
-                '_locale' => $app->getRequest()->getLocale(),
             ))
         ); ?>
 

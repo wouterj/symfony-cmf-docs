@@ -16,13 +16,18 @@ You can configure the route enhancers that decide what controller is used to
 handle the request, to avoid hard coding controller names into your route
 documents.
 
-The minimum configuration required to load the dynamic router as service
-``cmf_routing.dynamic_router`` is to have ``enabled: true`` in your
-application configuration, and to specify what route provider to use.
-The dynamic router is automatically enabled as soon as you add any other
-configuration to the ``dynamic`` entry. When not enabled, the dynamic router
-services will not be loaded at all, allowing you to use the ``ChainRouter``
-with your own routers.
+Configuration
+-------------
+
+The minimum configuration required to load the dynamic router is to specify a
+route provider backend and to register the dynamic router in the chain of
+routers.
+
+.. note::
+
+    When your project is also using the :doc:`CoreBundle <../core/introduction>`,
+    it is enough to configure persistence on ``cmf_core`` and you do not need to
+    repeat the configuration for the dynamic router.
 
 .. configuration-block::
 
@@ -30,9 +35,14 @@ with your own routers.
 
         # app/config/config.yml
         cmf_routing:
+            chain:
+                routers_by_id:
+                    router.default: 200
+                    cmf_routing.dynamic_router: 100
             dynamic:
-                enabled: true
-                # route provider configuration...
+                persistence:
+                    phpcr:
+                        enabled: true
 
     .. code-block:: xml
 
@@ -40,8 +50,15 @@ with your own routers.
         <?xml version="1.0" encoding="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services">
             <config xmlns="http://cmf.symfony.com/schema/dic/routing">
-                <dynamic enabled="true" />
-                <!-- route provider configuration... -->
+                <chain>
+                    <router-by-id id="router.default">200</router-by-id>
+                    <router-by-id id="cmf_routing.dynamic_router">100</router-by-id>
+                </chain>
+                <dynamic>
+                    <persistence>
+                        <phpcr enabled="true" />
+                    </persistence>
+                </dynamic>
             </config>
         </container>
 
@@ -49,16 +66,29 @@ with your own routers.
 
         // app/config/config.php
         $container->loadFromExtension('cmf_routing', array(
+            'chain' => array(
+                'routers_by_id' => array(
+                    'router.default' => 200,
+                    'cmf_routing.dynamic_router' => 100,
+                ),
+            ),
             'dynamic' => array(
-                'enabled' => true,
-                // route provider configuration...
+                'persistence' => array(
+                    'phpcr' => array(
+                        'enabled' => true,
+                    ),
+                ),
             ),
         ));
+
+When there is no configuration or ``cmf_routing.dynamic.enabled`` is set to
+``false``, the dynamic router services will not be loaded at all, allowing
+you to use the ``ChainRouter`` with your own routers.
 
 .. _bundle-routing-dynamic-match:
 
 Match Process
-~~~~~~~~~~~~~
+-------------
 
 Most of the match process is described in the documentation of the
 `CMF Routing component`_. The only difference is that this bundle will place
@@ -110,7 +140,7 @@ A custom controller action can look like this::
 .. _bundles-routing-dynamic_router-enhancer:
 
 Configuring the Controller for a Route
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 To configure what controller is used for which route, you can configure the
 *route enhancers*. Many of them operate on routes implementing
@@ -124,15 +154,15 @@ precedence):
 #. (Explicit controller): If there is a ``_controller`` set in
    ``getRouteDefaults()``, no enhancer will overwrite the controller.
    ``_template`` will still be inserted if its not already set;
-#. Controller by type: requires the route document to return a 'type' value in
+#. ``controllers_by_type``: requires the route document to return a 'type' value in
    ``getRouteDefaults()``. **priority: 60**;
-#. Controller by class: requires the route document to be an instance of
+#. ``controllers_by_class``: requires the route document to be an instance of
    ``RouteObjectInterface`` and to return an object for ``getRouteContent()``.
    The content document is checked for being ``instanceof`` the class names in
    the map and if matched that controller is used. Instanceof is used instead of
    direct comparison to work with proxy classes and other extending classes.
    **priority: 50**;
-#. Template by class: requires the route document to be an instance of
+#. ``templates_by_class``: requires the route document to be an instance of
    ``RouteObjectInterface`` and to return an object for ``getRouteContent()``.
    The content document is checked for being ``instanceof`` the class names in
    the map and if matched that template will be set as ``'_template'``.
@@ -203,7 +233,7 @@ All routes are located under a configured root path, for example
     use Symfony\Cmf\Bundle\RoutingBundle\Doctrine\Phpcr\Route;
 
     $route = new Route();
-    $route->setParent($dm->find(null, '/cms/routes'));
+    $route->setParentDocument($dm->find(null, '/cms/routes'));
     $route->setName('projects');
 
     // set explicit controller (both service and Bundle:Name:action syntax work)
@@ -263,31 +293,39 @@ need content, you can just not set it in the route document.
     from content instances. When resolving the route, the ``_locale`` gets
     into the request and is picked up by the Symfony2 locale system.
 
+    Make sure you configure the valid locales in the configuration so that the
+    bundle can optimally handle locales. The
+    :ref:`configuration reference <reference-config-routing-locales>` lists
+    some options to tweak behaviour and performance.
+
 .. note::
 
-    Under PHPCR-ODM, Routes should never be translatable documents, as one
+    Under PHPCR-ODM, Routes should not be translatable documents, as one
     Route document represents one single url, and serving several translations
     under the same url is not recommended.
 
-    If you need translated URLs, make the locale part of the route name and use
-    several routes for the same content. The route generator will pick the
-    correct route if available.
+    If you need translated URLs, make the ``locale`` part of the route name and
+    create one route per language for the same content. The route generator will
+    pick the correct route if available.
 
 Sonata Doctrine PHPCR-ODM Admin classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the :doc:`SonataDoctrinePhpcrAdminBundle <../doctrine_phpcr_admin>` is
-loaded in the application kernel, route and redirect route documents can be
-administrated in sonata admin. For instructions on how to configure Sonata,
-see :doc:`../doctrine_phpcr_admin`.
+If the SonataDoctrinePHPCRAdminBundle_ is loaded in the application kernel,
+route and redirect route documents can be administrated in sonata admin. For
+instructions on how to configure Sonata, see `configuring sonata admin`_.
 
 By default, ``use_sonata_admin`` is automatically set based on whether
-SonataDoctrinePhpcrAdminBundle is available, but you can explicitly
+SonataDoctrinePHPCRAdminBundle is available, but you can explicitly
 disable it to not have it even if sonata is enabled, or explicitly enable to
 get an error if Sonata becomes unavailable.
 
 Sonata admin is using the ``content_basepath`` to show the tree of content to
 select the route target.
+
+The root path to add Routes defaults to the first entry in ``route_basepaths``,
+but you can overwrite this with the ``admin_basepath`` if you need a different
+base path.
 
 .. configuration-block::
 
@@ -308,7 +346,6 @@ select the route target.
 
         <!-- app/config/config.xml -->
         <?xml version="1.0" encoding="UTF-8" ?>
-
         <container xmlns="http://cmf.symfony.com/schema/dic/services"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
@@ -352,6 +389,11 @@ Doctrine ORM integration
 Alternatively, you can use the `Doctrine ORM`_ provider by specifying the
 ``persistence.orm`` part of the configuration. It does a similar job but, as
 the name indicates, loads ``Route`` entities from an ORM database.
+
+.. caution::
+
+    You must install the CoreBundle to use this feature if your application
+    does not have at least DoctrineBundle 1.3.0.
 
 .. _bundles-routing-dynamic-generator:
 
@@ -409,8 +451,9 @@ to generate a route:
 
 .. caution::
 
-    It is dangerous to hardcode paths in your templates if the user has a way
-    to edit and delete them. If the route must exist for sure, it probably
+    It is dangerous to hardcode paths to PHPCR-ODM documents into your
+    templates. An admin user could edit or delete them in a way that your
+    application breaks. If the route must exist for sure, it probably
     should be a statically configured route. But route names could come from
     code for example.
 
@@ -439,7 +482,7 @@ object that implements this interface and provides a route for it:
 
 Additionally, the generator also understands the ``content_id`` parameter with
 an empty route name and tries to find a content implementing the
-``RouteReferrersInterface`` from the configured content repository.
+``RouteReferrersInterface`` from the configured content repository:
 
 .. configuration-block::
 
@@ -467,6 +510,23 @@ an empty route name and tries to find a content implementing the
 For the implementation details, please refer to the
 :ref:`component-routing-generator` section in the the cmf routing component
 documentation.
+
+.. sidebar:: Dumping Routes
+
+    The ``RouterInterface`` defines the method ``getRouteCollection`` to get
+    all routes available in a router. The ``DynamicRouter`` is able to provide
+    such a collection, however this feature is disabled by default to avoid
+    dumping large numbers of routes. You can set
+    ``cmf_routing.dynamic.route_collection_limit`` to a value bigger than 0
+    to have the router return routes up to the limit or ``false`` to disable
+    limits and return all routes.
+
+    With this option activated, tools like the ``router:debug`` command or the
+    `FOSJsRoutingBundle`_ will also show the routes coming from the database.
+
+    For the case of `FOSJsRoutingBundle`_, if you use the upcoming version 2 of
+    the bundle, you can configure ``fos_js_routing.router`` to
+    ``router.default`` to avoid the dynamic routes being included.
 
 Handling RedirectRoutes
 -----------------------
@@ -535,9 +595,7 @@ configuration in the ``sonata_admin`` section of your project configuration:
         <config xmlns="http://sonata-project.org/schema/dic/admin">
             <!-- ... -->
             <extension id="cmf_routing.admin_extension.route_referrers">
-                <implement>
-                    Symfony\Cmf\Component\Routing\RouteReferrersInterface
-                </implement>
+                <implement>Symfony\Cmf\Component\Routing\RouteReferrersInterface</implement>
             </extension>
         </config>
 
@@ -567,3 +625,6 @@ Read on in the chapter :doc:`customizing the dynamic router <dynamic_customize>`
 .. _`PHPCR-ODM`: http://www.doctrine-project.org/projects/phpcr-odm.html
 .. _`Sonata Admin extension documentation`: http://sonata-project.org/bundles/admin/master/doc/reference/extensions.html
 .. _`URL generating capabilities of Symfony2`: http://symfony.com/doc/current/book/routing.html#generating-urls
+.. _SonataDoctrinePHPCRAdminBundle: http://sonata-project.org/bundles/doctrine-phpcr-admin/master/doc/index.html
+.. _`configuring sonata admin`: http://sonata-project.org/bundles/doctrine-phpcr-admin/master/doc/reference/configuration.html
+.. _`FOSJsRoutingBundle`: https://github.com/FriendsOfSymfony/FOSJsRoutingBundle

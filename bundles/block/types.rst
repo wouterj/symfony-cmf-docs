@@ -21,16 +21,16 @@ Publish Workflow Interfaces
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ``AbstractBlock`` implements the write interfaces for publishable and
-publish time period, see the 
-:doc:`publish workflow documentation <../core/publish_workflow>` for more 
+publish time period, see the
+:doc:`publish workflow documentation <../core/publish_workflow>` for more
 information.
 
 Sonata Admin
 ~~~~~~~~~~~~
 
 All block types provided by the Symfony2 CMF BlockBundle come with a admin
-classes for :doc:`../doctrine_phpcr_admin`. To activate the admin services,
-it is enough to load the SonataDoctrinePhpcrAdminBundle in your application
+classes for SonataDoctrinePHPCRAdminBundle_. To activate the admin services,
+it is enough to load the SonataDoctrinePHPCRAdminBundle in your application
 kernel and configure the sonata dashboard as desired.
 
 .. _bundles-block-types-admin_extension:
@@ -106,7 +106,7 @@ SimpleBlock
 -----------
 
 Just a text block with a ``title`` and a ``body``. The default template
-renders both title and body with the twig ``raw`` filter, meaning HTML is
+renders both title and body with the Twig ``raw`` filter, meaning HTML is
 allowed in those fields.
 
 This block is useful to edit static text fragments and for example display
@@ -135,6 +135,22 @@ This block simply has the method ``setReferencedBlock`` that accepts any
 block mapped by the persistence layer as argument. If you set this to
 something that is not a valid block, the problem is only detected when
 rendering the block.
+
+.. _bundles-block-menu:
+
+.. versionadded:: 1.1
+    The MenuBlock was introduced in CmfBlockBundle 1.1.
+
+MenuBlock
+---------
+
+This block has no content of its own, but points to a target menu or
+menu entry. When rendered, this block renders the target menu just as
+if the target menu was directly used in that place. If pointing to a
+menu entry, the menu gets rendered from this point.
+
+This block simply has the method ``setMenuNode`` that accepts any
+menu mapped by the persistence layer as argument.
 
 ActionBlock
 -----------
@@ -201,6 +217,8 @@ The controller used to fetch the feed items can also be changed:
 .. note::
 
         The `Symfony CMF Sandbox`_ contains an example of the ``RssBlock``.
+
+.. _bundles-block-types-imagine:
 
 ImagineBlock
 ------------
@@ -275,7 +293,7 @@ SlideshowBlock
 
 The ``SlideshowBlock`` is a special kind of ``ContainerBlock``. It can contain
 any kind of blocks that will be rendered with a wrapper div to help a
-javascript slideshow library to slide them.
+JavaScript slideshow library to slide them.
 
 The ``ImagineBlock`` is particularly suited if you want to do an image
 slideshow, but the ``SlideshowBlock`` can handle any kind of blocks, also mixed
@@ -283,7 +301,7 @@ types of blocks in the same slideshow.
 
 .. note::
 
-    This bundle does not attempt to provide a javascript library for animating
+    This bundle does not attempt to provide a JavaScript library for animating
     the slideshow. Chose your preferred library that plays well with the rest
     of your site and hook it on the slideshows. (See also below).
 
@@ -292,7 +310,8 @@ Create your first Slideshow
 
 Building a slideshow consists of creating the container ``SlideshowBlock`` and
 adding blocks to it. Those blocks can be any kind of blocks, but the
-``ImagineBlock`` makes a lot of sense::
+``ImagineBlock`` makes a lot of sense. Make sure to have configured the imagine
+filter as explained :ref:`above <bundles-block-types-imagine>`::
 
     use Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\SlideshowBlock;
     use Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ImagineBlock;
@@ -337,11 +356,11 @@ a ``SlideshowBlock`` object, you can render it with:
             'name' => 'slideshow',
         )) ?>
 
-Make the slideshow work in the frontend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Make the Slideshow Work in the Front-End
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Since the BlockBundle doesn't contain anything to make the slideshow work
-in the frontend, you need to do this yourself. Use your favourite javascript
+in the front-end, you need to do this yourself. Use your favourite JavaScript
 library to make the slideshow interactive. If special markup is needed for
 your slideshow code to work, you can override
 ``BlockBundle:Block:block_slideshow.html.twig`` and/or the templates of the
@@ -364,7 +383,7 @@ following line to your sonata admin configuration:
                     blocks:
                         label: Blocks
                         items:
-                            - cmf_block.slideshow_admin
+                            - cmf_block.imagine.slideshow_admin
 
     .. code-block:: xml
 
@@ -375,7 +394,7 @@ following line to your sonata admin configuration:
                 <dashboard>
                     <group id="blocks"
                         label="Blocks">
-                        <item>cmf_block.slideshow_admin</item>
+                        <item>cmf_block.imagine.slideshow_admin</item>
                     </group>
                 </dashboard>
             </config>
@@ -390,7 +409,7 @@ following line to your sonata admin configuration:
                     'blocks' => array(
                         'label' => 'Blocks',
                         'items' => array(
-                            'cmf_block.slideshow_admin',
+                            'cmf_block.imagine.slideshow_admin',
                         ),
                     ),
                 ),
@@ -409,3 +428,4 @@ for further information.
 .. _`LiipImagineBundle`: https://github.com/liip/LiipImagineBundle
 .. _`LiipImagineBundle documentation`: https://github.com/liip/LiipImagineBundle/tree/master/Resources/doc
 .. _`sub-request`: http://symfony.com/doc/current/book/internals.html#internal-requests
+.. _SonataDoctrinePHPCRAdminBundle: http://sonata-project.org/bundles/doctrine-phpcr-admin/master/doc/index.html

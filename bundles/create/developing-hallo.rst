@@ -23,7 +23,7 @@ To use this template, specify ``hallo-coffee`` as editor in the
 
         {% render(controller(
             "cmf_create.jsloader.controller:includeJSFilesAction",
-            {'editor': 'hallo-coffee', '_locale': app.request.locale }
+            {'editor': 'hallo-coffee' }
         )) %}
 
     .. code-block:: php
@@ -31,12 +31,11 @@ To use this template, specify ``hallo-coffee`` as editor in the
         <?php $view['actions']->render(
             new ControllerReference('cmf_create.jsloader.controller:includeJSFilesAction", array(
                 'editor'  => 'hallo-coffee',
-                '_locale' => $app->getRequest()->getLocale(),
             ))
         ) ?>
 
 The hallo-coffee template uses assetic to load the coffee script files from
-``Resources/public/vendor/hallo/src``, rather than the precompiled javascript
+``Resources/public/vendor/hallo/src``, rather than the precompiled JavaScript
 from ``Resources/public/vendor/create/deps/hallo-min.js``. This also means
 that you need to add a mapping for coffeescript in your assetic configuration
 and you need the `coffee compiler set up correctly`_.

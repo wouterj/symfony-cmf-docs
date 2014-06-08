@@ -27,10 +27,8 @@ The `CMF website`_ is an application using the SimpleCmsBundle.
 Installation
 ------------
 
-You can install the bundle in 2 different ways:
-
-* Use the official Git repository (https://github.com/symfony-cmf/SimpleCmsBundle);
-* Install it via Composer (``symfony-cmf/simple-cms-bundle`` on `Packagist`_).
+You can install this bundle `with composer`_ using the
+``symfony-cmf/simple-cms-bundle`` package on `Packagist`_.
 
 Sections
 --------
@@ -39,6 +37,7 @@ Sections
 * :doc:`rendering`
 * :doc:`extending_page_class`
 
-.. _`Symfony CMF Standard Edition`: https://github.com/symfony-cmf/symfony-cmf-standard
+.. _`Symfony CMF Standard Edition`: https://github.com/symfony-cmf/standard-edition
 .. _`CMF website`: https://github.com/symfony-cmf/cmf-website/
+.. _`with composer`: http://getcomposer.org
 .. _`Packagist`: https://packagist.org/packages/symfony-cmf/simple-cms-bundle

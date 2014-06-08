@@ -40,10 +40,8 @@ persisted using Doctrine PHPCR-ODM, Doctrine ORM or something else.
 Installation
 ------------
 
-1. You can install the bundle in 2 different ways:
-
-  * Use the official Git repository (https://github.com/symfony-cmf/MediaBundle);
-  * Install it via Composer (``symfony-cmf/media-bundle`` on `Packagist`_).
+1. You can install the bundle via Composer (``symfony-cmf/media-bundle`` on
+   `Packagist`_).
 
 2. When using the file and image controller for downloading, uploading and
    displaying, add the following lines to the end of your routing file:
@@ -87,9 +85,14 @@ Installation
 
            return $collection;
 
-3. Run the ``doctrine:phpcr:repository:init`` command, it runs all tagged
-   :ref:`phpcr-odm-repository-initializers` including the MediaBundle
-   initializer.
+3. For now, the only supported persistence layer is PHPCR. If you enabled PHPCR
+   on the CoreBundle, you need to do nothing here. If you do not have the
+   CMF CoreBundle in your project, you need to configure
+   ``cmf_media.persistence.phpcr.enabled: true``.
+
+4. For PHPCR, run the ``doctrine:phpcr:repository:init`` command, to have the
+   base paths initialized, using the
+   :ref:`repository initializers <phpcr-odm-repository-initializers>`.
 
 Interfaces
 ----------
@@ -170,7 +173,7 @@ using this **path**:
 Form Types
 ----------
 
-The MediaBundle provides some usefull form types, read more about the types in
+The MediaBundle provides some useful form types, read more about the types in
 :doc:`form_types`.
 
 Templating
@@ -235,7 +238,7 @@ is protected by the ``ROLE_CAN_UPLOAD_FILE`` role.
 
 The ``UploadFileHelper`` contains ``UploadEditorHelperInterface`` instances.
 This handles the response returned of the file upload depending on the web
-editing tool used and can be json, javascript or something else. Implement
+editing tool used and can be json, JavaScript or something else. Implement
 your own for specific needs, add it to the service configuration and tag the
 service with ``cmf_media.upload_editor_helper``, the tag alias is the editor
 helper name. The ``UploadFileHelper`` checks the request for the parameter

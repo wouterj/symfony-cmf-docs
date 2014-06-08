@@ -97,7 +97,7 @@ The configuration for the example above could be as follows:
 .. configuration-block::
 
     .. code-block:: yaml
-    
+
         # app/config/config.yml
         cmf_routing_auto:
             mappings:
@@ -133,7 +133,7 @@ The configuration for the example above could be as follows:
                 <mapping class="Acme\ForumBundle\Document\Topic">
 
                     <content-path>
-                        <!-- corresponds first path unit in diagram:  my-forum -->
+                        <!-- corresponds first path unit in diagram: my-forum -->
                         <path-unit name="forum_path">
                             <provider name="specified">
                                 <option name="path" value="my-forum" />
@@ -209,7 +209,7 @@ The ``Topic`` document would then need to implement the methods named above as
 follows::
 
     // src/Acme/ForumBundle/Document/Topic.php
-    namespace Acme/ForumBundle/Document;
+    namespace Acme\ForumBundle\Document;
 
     class Topic
     {
@@ -234,6 +234,13 @@ follows::
 
 After persisting this object, the route will be created. Of course, you need to make
 the properties editable and then you have a fully working routing system.
+
+.. note::
+
+    Any mapping applied to an object will also apply to subclasses of that
+    object. Imagine you have 2 documents, ``ContactPage`` and ``Page``, which
+    both extend ``AbstractPage``. When you map the ``AbstractPage`` class, it
+    will be applied to both documents.
 
 Provided Providers and Action
 -----------------------------

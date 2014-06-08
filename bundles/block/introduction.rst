@@ -15,10 +15,8 @@ including the ability to edit them. See :doc:`types`.
 Installation
 ------------
 
-You can install the bundle in 2 different ways:
-
-* Use the official Git repository (https://github.com/symfony-cmf/BlockBundle);
-* Install it via Composer (``symfony-cmf/block-bundle`` on `Packagist`_).
+You can install this bundle `with composer`_ using the
+`symfony-cmf/block-bundle`_ package.
 
 .. _bundle-block-configuration:
 
@@ -33,7 +31,7 @@ individually as follows:
 
     .. code-block:: yaml
 
-        cmf_core:
+        cmf_block:
             persistence:
                 phpcr:
                     block_basepath: /cms/content
@@ -43,7 +41,7 @@ individually as follows:
         <?xml version="1.0" charset="UTF-8" ?>
         <container xmlns="http://symfony.com/schema/dic/services">
 
-            <config xmlns="http://cmf.symfony.com/schema/dic/core">
+            <config xmlns="http://cmf.symfony.com/schema/dic/block">
                 <persistence>
                     <phpcr
                         block-basepath="/cms/block"
@@ -55,7 +53,7 @@ individually as follows:
 
     .. code-block:: php
 
-        $container->loadFromExtension('cmf_core', array(
+        $container->loadFromExtension('cmf_block', array(
             'persistence' => array(
                 'phpcr' => array(
                     'block_basepath' => '/cms/block',
@@ -161,6 +159,8 @@ your block in the repository. You can do so with the following code snippet::
     use Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\SimpleBlock;
 
     // ...
+    /** @var $dm \Doctrine\ODM\PHPCR\DocumentManager */
+    $parentDocument = $dm->find(null, '/cms/content/home');
 
     $myBlock = new SimpleBlock();
     $myBlock->setParentDocument($parentDocument);
@@ -189,7 +189,7 @@ Block Context
 
 The BlockContext contains all information and the block document needed to
 render the block. It aggregates and merges all settings from configuration,
-the block service, the block document and settings passed to the twig template
+the block service, the block document and settings passed to the Twig template
 helper. Therefore, use the BlockContext to get or alter a setting if needed.
 
 .. _bundle-block-service:
@@ -197,136 +197,22 @@ helper. Therefore, use the BlockContext to get or alter a setting if needed.
 Block Service
 -------------
 
-If you look inside the ``SimpleBlock`` class, you will notice the method
-``getType``. This defines the name of the block service that processes the
-block when it is rendered.
+Internally, the block bundle uses a block service to work with each type
+of block. The service is configured to handle a *type* of block. The
+blocks themselves identify their type in the ``getType`` method.
 
-A block service contains:
-
-* An execute method;
-* Default settings;
-* Dorm configuration;
-* Cache configuration;
-* Javascript and stylesheet assets to be loaded;
-* A load method.
-
-The block services provided by the Symfony2 CMF BlockBundle are in the
-namespace ``Symfony\Cmf\Bundle\BlockBundle\Block``.
-
-.. note::
-
-    Always make sure you implement the interface
-    ``Sonata\BlockBundle\Block\BlockServiceInterface`` or extend a block
-    service like ``Sonata\BlockBundle\Block\BaseBlockService``.
-
-.. _bundle-block-execute:
-
-The Execute Method
-~~~~~~~~~~~~~~~~~~
-
-This method of a block service contains *controller* logic::
-
-    // ...
-    if ($block->getEnabled()) {
-        $feed = false;
-        if ($blockContext->getSetting('url', false)) {
-            $feed = $this->feedReader->import($block);
-        }
-
-        return $this->renderResponse($blockContext->getTemplate(), array(
-            'feed'     => $feed,
-            'block'    => $blockContext->getBlock(),
-            'settings' => $blockContext->getSettings(),
-        ), $response);
-    }
-    // ...
-
-.. note::
-
-    If you need complex logic to handle a block, it is recommended to move that
-    logic into a dedicated service and inject that service into the block
-    service and call it in the ``execute`` method.
-
-Default Settings
-~~~~~~~~~~~~~~~~
-
-The method ``setDefaultSettings`` specifies the default settings for a block.
-Settings can be altered in multiple places afterwards, cascading as follows:
-
-* Default settings are stored in the block service;
-* If you use a 3rd party bundle you might want to change them in the bundle
-  configuration for your application see :ref:`bundle-block-configuration`;
-* Settings can be altered through template helpers (see example);
-* And settings can also be altered in a block document, the advantage is that
-  settings are stored in the database and are individual to the specific block
-  instead of all blocks of a type.
-
-Example of how settings can be specified through a template helper:
-
-.. configuration-block::
-
-    .. code-block:: jinja
-
-        {{ sonata_block_render({'name': 'rssBlock'}, {
-            'title': 'Symfony2 CMF news',
-            'url': 'http://cmf.symfony.com/news.rss'
-        }) }}
-
-    .. code-block:: html+php
-
-        <?php $view['blocks']->render(array('name' => 'rssBlock'), array(
-            'title' => 'Symfony2 CMF news',
-            'url'   => 'http://cmf.symfony.com/news.rss',
-        )) ?>
-
-Form Configuration
-~~~~~~~~~~~~~~~~~~
-
-The methods ``buildEditForm`` and ``buildCreateForm`` specify how to build the
-the forms for editing using a frontend or backend UI. The method
-``validateBlock`` contains the validation configuration.
-
-Cache Configuration
-~~~~~~~~~~~~~~~~~~~
-
-The method ``getCacheKeys`` contains cache keys to be used for caching the
-block.
-
-Javascript and Stylesheets
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The methods ``getJavascripts`` and ``getStylesheets`` can be used to define
-javascript and stylesheet assets needed by a block. Use the twig helpers
-``sonata_block_include_javascripts`` and ``sonata_block_include_stylesheets``
-to render them:
-
-.. configuration-block::
-
-    .. code-block:: jinja
-
-        {{ sonata_block_include_javascripts() }}
-        {{ sonata_block_include_stylesheets() }}
-
-    .. code-block:: html+php
-
-        <?php $view['blocks']->includeJavaScripts() ?>
-        <?php $view['blocks']->includeStylesheets() ?>
-
-.. note::
-
-    This will output the javascripts and stylesheets for all blocks loaded in
-    the service container of your application.
-
-The Load Method
-~~~~~~~~~~~~~~~
-
-The method ``load`` can be used to load additional data. It is called each
-time a block is rendered before the ``execute`` method is called.
+When using the provided blocks, you do not need to worry about the block
+service. It is only relevant when
+:doc:`creating your own blocks <create_your_own_blocks>`.
 
 .. _bundle-block-rendering:
 
 Block rendering
 ---------------
+
+Rendering is handled by the SonataBlockBundle ``sonata_block_render`` Twig
+function. The block name is either an absolute PHPCR path or the name of the
+block relative to the ``cmfMainContent`` document.
 
 To render the example from the :ref:`bundle-block-document` section, just add
 the following code to your Twig template:
@@ -378,8 +264,117 @@ receives the block object (equivalent to a Request object) and a ``Response``
 object. The purpose of the ``execute`` method to set the content of the
 response object - typically by rendering a Twig template.
 
-You can also :ref:`embed blocks in WYSIWYG content <tutorial-block-embed>`
-using the ``cmf_embed_blocks`` filter.
+.. _bundle-block-embed:
+
+Embedding Blocks in WYSIWYG Content
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The CmfBlockBundle provides a Twig filter ``cmf_embed_blocks`` that
+looks through the content and looks for special tags to render blocks. To use
+the tag, you need to apply the ``cmf_embed_blocks`` filter to your output. If
+you can, render your blocks directly in the template. This feature is only a
+cheap solution for web editors to place blocks anywhere in their HTML content.
+A better solution to build composed pages is to build it from blocks (there
+might be a CMF bundle at some point for this).
+
+.. configuration-block::
+
+    .. code-block:: jinja
+
+        {{ page.content|cmf_embed_blocks }}
+
+    .. code-block:: html+php
+
+        <?php echo $view['blocks']->embedBlocks(
+            $page->getContent()
+        ) ?>
+
+.. caution::
+
+    Make sure to only place this filter where you display the content and not
+    where editing it, as otherwise your users would start to edit the rendered
+    output of their blocks.
+    This feature conflicts with the front-end editing provided by CreateBundle,
+    as create.js operates on the rendered content as displayed to the user.
+    There is an ongoing `discussion how to fix this`_.
+
+When you apply the filter, your users can use this tag to embed a block in
+their content:
+
+.. code-block:: text
+
+    %embed-block|/absolute/path/to/block|end%
+
+    %embed-block|local-block|end%
+
+The path to the block is either absolute or relative to the current main
+content. The prefix and postfix are configurable. The default prefix is
+``%embed-block|`` and the default postfix is ``|end%``. Say you want
+to use ``%%%block:"/absolute/path"%%%`` then you do:
+
+.. configuration-block::
+
+     .. code-block:: yaml
+
+        # app/config/config.yml
+        cmf_block:
+            twig:
+                cmf_embed_blocks:
+                    prefix: '%%%block:"'
+                    postfix: '"%%%'
+
+    .. code-block:: xml
+
+        <!-- app/config/config.xml -->
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <container xmlns="http://symfony.com/schema/dic/services">
+
+            <config xmlns="http://cmf.symfony.com/schema/dic/block">
+                <twig>
+                    <cmf-embed-blocks
+                        prefix="%%%block:&quot;"
+                        postfix="&quot;%%%"
+                    />
+                </twig>
+            </config>
+        </container>
+
+    .. code-block:: php
+
+        // app/config/config.php
+        $container->loadFromExtension('cmf_block', array(
+            'twig' => array(
+                'cmf_embed_blocks' => array(
+                    'prefix' => '%%%block:"',
+                    'postfix' => '"%%%',
+                ),
+            ),
+        );
+
+See also the :ref:`the configuration reference <reference-config-block-twig-cmf-embed-blocks>`.
+
+.. caution::
+
+    Currently there is no security built into this feature. Only enable the
+    filter for content for which you are sure only trusted users may edit it.
+    Restrictions about what block can be where that are built into an admin
+    interface are not respected here.
+
+.. note::
+
+    The block embed filter ignores all errors that might occur when rendering a
+    block and returns an empty string for each failed block instead. The errors
+    are logged at level WARNING.
+
+SonataAdminBundle Integration
+-----------------------------
+
+The BlockBundle also provides Admin classes to enable creating, editing and
+removing blocks from the admin panel. To enable the admin, use the
+``cmf_block.persistence.phpcr.use_sonata_admin`` setting. Both the
+:ref:`BlockBundle <bundles-block-types-admin_extension>` and
+:ref:`CoreBundle <bundles-core-persistence>` provide several extensions for
+SonataAdminBundle.
 
 Examples
 --------
@@ -396,7 +391,9 @@ Read on
 * :doc:`cache`
 * :doc:`relation_to_sonata_block_bundle`
 
-.. _`Packagist`: https://packagist.org/packages/symfony-cmf/block-bundle
+.. _`symfony-cmf/block-bundle`: https://packagist.org/packages/symfony-cmf/block-bundle
+.. _`with composer`: http://getcomposer.org
 .. _`Symfony CMF Sandbox`: https://github.com/symfony-cmf/cmf-sandbox
 .. _`prepended configuration`: http://symfony.com/doc/current/components/dependency_injection/compilation.html#prepending-configuration-passed-to-the-extension
 .. _`SonataBlockBundle`: https://github.com/sonata-project/SonataBlockBundle
+.. _`discussion how to fix this`: https://github.com/symfony-cmf/BlockBundle/issues/143

@@ -6,7 +6,8 @@ TreeBrowserBundle
 =================
 
     The TreeBrowserBundle provides a tree navigation on top of a PHPCR
-    repository.
+    repository. The front-end implementation is based on the jQuery plugin
+    `jsTree`_.
 
 This bundle consists of two parts:
 
@@ -16,10 +17,25 @@ This bundle consists of two parts:
 Installation
 ------------
 
-You can install the bundle in 2 different ways:
+You can install this bundle `with composer`_ using the
+``symfony-cmf/seo-content-bundle`` package on `Packagist`_.
 
-* Use the official Git repository (https://github.com/symfony-cmf/TreeBrowserBundle);
-* Install it via Composer (``symfony-cmf/tree-browser-bundle`` on `Packagist`_).
+Both the CmfTreeBrowserBundle and FOSJsRoutingBundle_ must be registered in the
+``AppKernel``::
+
+    // app/appKernel.php
+    // ...
+    public function registerBundles()
+    {
+        $bundles = array(
+            // ...
+            new FOS\JsRoutingBundle\FOSJsRoutingBundle(),
+            new Symfony\Cmf\Bundle\TreeBrowserBundle\CmfTreeBrowserBundle(),
+        );
+        // ...
+
+        return $bundles;
+    }
 
 Routing
 -------
@@ -63,12 +79,12 @@ configuration:
 Usage
 -----
 
-The TreeBrowserBundle provides a ``select_tree.js`` and ``admin_tree.js`` file, which are
-a wrapper to build a jQuery tree. Use them with ``SelectTree.initTree`` resp.
-``AdminTree.initTree``.
+The TreeBrowserBundle provides the ``select_tree.js`` and ``admin_tree.js``
+files, which are wrappers to build a jQuery tree. Use them with
+``SelectTree.initTree`` resp. ``AdminTree.initTree``.
 
-* ``SelectTree`` in ``select_tree.js`` is a tree to select a node to put its id
-  into a field;
+* ``SelectTree`` in ``select_tree.js`` is a tree to select a target tree node,
+  e.g. in a form. The id of the target is put into a text field;
 * ``AdminTree`` in ``admin_tree.js`` is a tree to create, move and edit nodes.
 
 Both have the following options when creating:
@@ -104,131 +120,17 @@ admin_tree.js only
 Examples
 --------
 
-Look at the templates in the SonataAdminBundle for examples how to build the
-tree:
+Look at the templates in the SonataDoctrinePHPCRAdminBundle_ for examples how
+you could build a tree:
 
 * `admin_tree.js`_
 * `select_tree.js`_ (look for ``doctrine_phpcr_type_tree_model_widget``)
 
-In the same bundle the `PhpcrOdmTree`_ implements the tree interface and gives
-an example how to implement the methods.
-
-Here are some common tips about TreeBrowser utilization:
-
-Define Tree Elements
-~~~~~~~~~~~~~~~~~~~~
-
-The first step, is to define all the elements allowed in the tree and their
-children. Have a look at the `cmf-sandbox configuration`_, the section
-``document_tree`` in ``sonata_doctrine_phpcr_admin``.
-
-This configuration is set for all your application trees regardless their type
-(admin or select).
-
-.. configuration-block::
-
-    .. code-block:: yaml
-
-        sonata_doctrine_phpcr_admin:
-            document_tree_defaults: [locale]
-            document_tree:
-                Doctrine\ODM\PHPCR\Document\Generic:
-                    valid_children:
-                        - all
-                Symfony\Cmf\Bundle\ContentBundle\Doctrine\Phpcr\StaticContent:
-                    valid_children:
-                        - Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\SimpleBlock
-                        - Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ContainerBlock
-                        - Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ReferenceBlock
-                        - Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ActionBlock
-                Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ReferenceBlock:
-                    valid_children: []
-                # ...
-
-    .. code-block:: xml
-
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <container xmlns="http://symfony.com/schema/dic/services">
-
-            <config xmlns="http://sonata-project.org/schema/dic/doctrine_phpcr_admin" />
-
-                <document-tree-default>locale</document-tree-default>
-
-                <document-tree class="Doctrine\ODM\PHPCR\Document\Generic">
-                    <valid-child>all</valid-child>
-                </document-tree>
-
-                <document-tree class="Symfony\Cmf\Bundle\ContentBundle\Doctrine\Phpcr\StaticContent">
-                    <valid-child>Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\SimpleBlock</valid-child>
-                    <valid-child>Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ContainerBlock</valid-child>
-                    <valid-child>Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ReferenceBlock</valid-child>
-                    <valid-child>Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ActionBlock</valid-child>
-                </document-tree>
-
-                <document-tree class="Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ReferenceBlock" />
-
-                <!-- ... -->
-            </config>
-        </container>
-
-    .. code-block:: php
-
-        $container->loadFromExtension('sonata_doctrine_phpcr_admin', array(
-            'document_tree_defaults' => array('locale'),
-            'document_tree' => array(
-                'Doctrine\ODM\PHPCR\Document\Generic' => array(
-                    'valid_children' => array(
-                        'all',
-                    ),
-                ),
-                'Symfony\Cmf\Bundle\ContentBundle\Doctrine\Phpcr\StaticContent' => array(
-                    'valid_children' => array(
-                        'Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\SimpleBlock',
-                        'Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ContainerBlock',
-                        'Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ReferenceBlock',
-                        'Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ActionBlock',
-                    ),
-                ),
-                'Symfony\Cmf\Bundle\BlockBundle\Doctrine\Phpcr\ReferenceBlock' => array(
-                    'valid_children' => array(),
-                ),
-                // ...
-        ));
-
-Add an Admin Tree to Your Page
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can add an admin tree to your page either in an action template or in a
-custom block. You have to specify the tree root and the selected item, this
-allows you to have different type of content in your tree. For instance, if
-you use menu elements it looks like:
-
-.. configuration-block::
-
-    .. code-block:: jinja
-
-        {% render(controller(
-            'sonata.admin.doctrine_phpcr.tree_controller:treeAction',
-             {
-                'root':     websiteId ~ "/menu",
-                'selected': menuNodeId,
-                '_locale':  app.request.locale
-            }
-        )) %}
-
-    .. code-block:: php
-
-        <?php echo $view['actions']->render(new ControllerReference(
-                'sonata.admin.doctrine_phpcr.tree_controller:treeAction',
-                array(
-                    'root'     => $websiteId.'/menu',
-                    'selected' => $menuNodeId,
-                    '_locale'  => $app->getRequest()->getLocale()
-                ),
-        )) ?>
+In the same bundle, the `PhpcrOdmTree`_ implements the tree interface and
+provides an example how to implement the methods.
 
 Customizing the Tree Behaviour
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 The TreeBrowserBundle is based on `jsTree`_. jsTree works with events,
 dispatched everytime the user does an action. A simple way to customize the
@@ -245,9 +147,8 @@ from the admin tree:
     .. code-block:: html+jinja
 
         {% render 'sonata.admin.doctrine_phpcr.tree_controller:treeAction' with {
-            'root':     websiteId ~ "/menu",
-            'selected': menuNodeId,
-            '_locale':  app.request.locale
+            'root':     sitePath ~ "/menu",
+            'selected': menuNodeId
         } %}
         <script type="text/javascript">
             $(document).ready(function() {
@@ -265,9 +166,8 @@ from the admin tree:
 
         <?php
         $view['actions']->render('sonata.admin.doctrine_phpcr.tree_controller:treeAction', array(
-            'root'     => $websiteId.'/menu',
+            'root'     => $sitePath . '/menu',
             'selected' => $menuNodeId,
-            '_locale'  => $app->getRequest()->getLocale()
         ))?>
         <script type="text/javascript">
             $(document).ready(function() {
@@ -280,6 +180,11 @@ from the admin tree:
                 });
             });
         </script>
+
+.. note::
+
+    This example assumes you have the SonataDoctrinePHPCRAdminBundle_
+    available, to have a tree implementation.
 
 By default, the item selection opens the edit route of the admin class of the
 element. This action is bind to the ``select_node.jstree``. If you want to
@@ -323,48 +228,14 @@ For example, if your want to open a custom action:
 
 .. note::
 
-    Don't forget to add your custom route to the
-    ``fos_js_routing.routes_to_expose`` configuration:
+    This bundle automatically exposes routes with the FOSJsRoutingBundle_
+    to allow the tree to work.
 
-    .. configuration-block::
-
-        .. code-block:: yaml
-
-            fos_js_routing:
-                routes_to_expose:
-                    - cmf_tree_browser.phpcr_children
-                    - cmf_tree_browser.phpcr_move
-                    - sonata.admin.doctrine_phpcr.phpcrodm_children
-                    - sonata.admin.doctrine_phpcr.phpcrodm_move
-                    - presta_cms_page_edit
-
-        .. code-block:: xml
-
-            <config xmlns="http://example.org/schema/dic/fos_js_routing">
-                <routes-to-expose>cmf_tree_browser.phpcr_children</routes-to-expose>
-                <routes-to-expose>cmf_tree_browser.phpcr_move</routes-to-expose>
-                <routes-to-expose>sonata.admin.doctrine_phpcr.phpcrodm_children</routes-to-expose>
-                <routes-to-expose>sonata.admin.doctrine_phpcr.phpcrodm_move</routes-to-expose>
-                <routes-to-expose>presta_cms_page_edit</routes-to-expose>
-            </config>
-
-        .. code-block:: php
-
-            $container->loadFromExtension('fos_js_routing', array(
-                'routes_to_expose' => array(
-                    'cmf_tree_browser.phpcr_children',
-                    'cmf_tree_browser.phpcr_move',
-                    'sonata.admin.doctrine_phpcr.phpcrodm_children',
-                    'sonata.admin.doctrine_phpcr.phpcrodm_move',
-                    'presta_cms_page_edit',
-                ),
-            ));
-
-.. _`Packagist`: https://packagist.org/packages/symfony-cmf/simple-cms-bundle
+.. _`Packagist`: https://packagist.org/packages/symfony-cmf/tree-browser-bundle
+.. _`with composer`: http://getcomposer.org
 .. _`FOSJsRoutingBundle`: https://github.com/FriendsOfSymfony/FOSJsRoutingBundle
-.. _`SonatajQueryBundle`: https://github.com/sonata-project/SonatajQueryBundle
 .. _`admin_tree.js`: https://github.com/sonata-project/SonataDoctrinePhpcrAdminBundle/blob/master/Resources/views/Tree/tree.html.twig
 .. _`select_tree.js`: https://github.com/sonata-project/SonataDoctrinePhpcrAdminBundle/blob/master/Resources/views/Form/form_admin_fields.html.twig
 .. _`PhpcrOdmTree`: https://github.com/sonata-project/SonataDoctrinePhpcrAdminBundle/blob/master/Tree/PhpcrOdmTree.php
-.. _`cmf-sandbox configuration`: https://github.com/symfony-cmf/cmf-sandbox/blob/master/app/config/config.yml
-.. _`jsTree`: http://www.jstree.com/documentation
+.. _`jsTree`: http://www.jstree.com/
+.. _SonataDoctrinePHPCRAdminBundle: http://sonata-project.org/bundles/doctrine-phpcr-admin/master/doc/index.html

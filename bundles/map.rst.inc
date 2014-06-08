@@ -19,6 +19,7 @@ library or they introduce a complete new concept.
   * :doc:`core/dependency_injection_tags`
   * :doc:`core/templating`
   * :doc:`core/persistence`
+  * :doc:`core/forms`
 
 * :doc:`create/index`
 
@@ -56,7 +57,13 @@ library or they introduce a complete new concept.
 
 * :doc:`search/index`
 
-* :doc:`search/introduction`
+  * :doc:`search/introduction`
+
+* :doc:`seo/index`
+
+  * :doc:`seo/introduction`
+  * :doc:`seo/seo_aware`
+  * :doc:`seo/extractors`
 
 * :doc:`tree_browser/index`
 
@@ -91,10 +98,15 @@ Contributed Bundles
 Besides that, the Symfony CMF team also maintains some 3th party bundles which
 help with integrating PHPCR concepts into the Symfony Framework.
 
-* **DoctrinePHPCRBundle**
+* :doc:`phpcr_odm/index`
 
-  * :doc:`phpcr_odm`
+  * :doc:`phpcr_odm/introduction`
+  * :doc:`phpcr_odm/events`
+  * :doc:`phpcr_odm/forms`
+  * :doc:`phpcr_odm/fixtures_initializers`
+  * :doc:`phpcr_odm/multilang`
+  * :doc:`phpcr_odm/multiple_sessions`
 
-* **SonataDoctrinePhpcrAdminBundle**
+* SonataDoctrinePHPCRAdminBundle_
 
-  * :doc:`doctrine_phpcr_admin`
+.. _SonataDoctrinePHPCRAdminBundle: http://sonata-project.org/bundles/doctrine-phpcr-admin/master/doc/index.html
